@@ -1,0 +1,101 @@
+{
+  "project_overview": {
+    "name": "AI Stylist (나만의 AI 스타일리스트)",
+    "description": "Gemini AI를 활용한 개인 맞춤형 패션 추천 웹 애플리케이션",
+    "tech_stack": {
+      "framework": "Next.js 14 (App Router)",
+      "database": "PostgreSQL (Neon hosted)",
+      "orm": "Prisma",
+      "ai": "Google Gemini 2.0 Flash API",
+      "weather_api": "OpenWeatherMap",
+      "deployment": "Vercel",
+      "styling": "Tailwind CSS"
+    }
+  },
+  
+  "deployment_info": {
+    "platform": "Vercel",
+    "github_repo": "https://github.com/ksw6895/aistylist.git",
+    "deployment_method": "GitHub 연동 자동 배포 (main 브랜치 push 시)",
+    "environment_variables": [
+      "GEMINI_API_KEY",
+      "OPENWEATHER_API_KEY",
+      "DATABASE_URL",
+      "POSTGRES_URL_NON_POOLING"
+    ],
+    "database_note": "Neon PostgreSQL 사용 중 (Vercel Postgres에서 마이그레이션)"
+  },
+  
+  "completed_features": [
+    {
+      "feature": "기본 스타일 추천 기능",
+      "description": "사용자 정보, 날짜, 지역, TPO, 분위기를 입력받아 AI가 2가지 스타일 추천"
+    },
+    {
+      "feature": "드레싱룸 및 쇼핑리스트",
+      "description": "추천받은 아이템을 카테고리별로 저장 및 관리"
+    },
+    {
+      "feature": "자연어 처리 'Considering' 기능",
+      "description": "Gemini AI를 활용해 '벨트가 없어', '벨트 제외' 등 자연스러운 표현 이해"
+    },
+    {
+      "feature": "토스트 메시지 시스템",
+      "description": "alert 대신 우하단 슬라이드업 애니메이션으로 상세 피드백 제공"
+    },
+    {
+      "feature": "A/B 멀티 선택",
+      "description": "추천받은 착장 A와 B를 동시에 선택 가능"
+    },
+    {
+      "feature": "추천 히스토리",
+      "description": "과거 추천 내역을 DB에 저장하고 조회하는 기능"
+    }
+  ],
+  
+  "issues_to_fix": [
+    {
+      "priority": "HIGH",
+      "issue": "날씨 API 정확도 문제",
+      "description": "선택한 날짜의 날씨가 아닌 현재 날씨를 가져오는 문제. OpenWeatherMap API는 과거/미래 날씨 조회에 제한이 있음",
+      "suggestion": "날씨 예보 API 사용 또는 날씨 입력을 수동으로 변경"
+    },
+    {
+      "priority": "HIGH", 
+      "issue": "드레싱룸 그룹화 기능 작동 안 함",
+      "description": "추천 묶음별 보기가 작동하지 않음. DB 마이그레이션이 Vercel에서 실행되지 않았을 가능성",
+      "solution": "1) Vercel 대시보드에서 수동으로 'npx prisma migrate deploy' 실행 필요, 2) 또는 빌드 스크립트에 마이그레이션 명령 추가"
+    },
+    {
+      "priority": "MEDIUM",
+      "issue": "추천 히스토리 저장 타이밍",
+      "description": "컴포넌트 마운트 시 저장되어 새로고침할 때마다 중복 저장될 수 있음",
+      "current_solution": "localStorage를 사용한 중복 방지 로직 구현했으나 더 나은 방법 필요"
+    }
+  ],
+  
+  "database_migrations": {
+    "pending_migrations": [
+      "20250115000000_add_recommendation_history - RecommendationHistory 테이블 추가",
+      "20250115000001_add_group_columns - DressingRoomItem에 그룹 관련 컬럼 추가"
+    ],
+    "migration_command": "npx prisma migrate deploy",
+    "note": "Vercel 배포 시 자동 실행되지 않으면 수동 실행 필요"
+  },
+  
+  "next_steps": [
+    "Vercel 대시보드에서 데이터베이스 마이그레이션 실행 확인",
+    "날씨 API를 예보 API로 변경하거나 수동 입력 방식 고려",
+    "드레싱룸 그룹화 기능 디버깅",
+    "추천 히스토리 중복 저장 방지 로직 개선"
+  ],
+  
+  "useful_commands": {
+    "local_development": "npm run dev",
+    "build": "npm run build",
+    "database_migration": "npx prisma migrate dev",
+    "database_deploy": "npx prisma migrate deploy",
+    "prisma_generate": "npx prisma generate",
+    "git_commit_and_push": "git add -A && git commit -m 'message' && git push origin main"
+  }
+}
