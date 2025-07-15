@@ -44,6 +44,11 @@ export interface RecommendRequest {
 export interface CategoryItem {
   category: string;
   description: string;
+  groupId?: string;
+  groupName?: string;
+  groupDate?: string;
+  groupWeather?: string;
+  groupTPO?: string;
 }
 
 export interface WeatherData {

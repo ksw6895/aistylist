@@ -34,11 +34,16 @@ export default function RecommendationPage() {
       if (weatherInfo) {
         setWeather(weatherInfo);
       }
-      
-      // Save to history when recommendation is loaded
-      saveToHistory();
     }
   }, [currentRecommendation, router]);
+  
+  useEffect(() => {
+    // Save to history when recommendation is loaded (only once)
+    if (currentRecommendation && userId && !localStorage.getItem('historySaved')) {
+      saveToHistory();
+      localStorage.setItem('historySaved', 'true');
+    }
+  }, [currentRecommendation, userId]);
   
   const saveToHistory = async () => {
     if (!userId || !currentRecommendation) return;
@@ -144,6 +149,11 @@ export default function RecommendationPage() {
     setLoading(true);
     const items: CategoryItem[] = [];
     const categories = ['outer', 'top', 'bottom', 'shoes', 'bag', 'belt', 'hat', 'jewelry'];
+    const groupId = new Date().getTime().toString();
+    const tpo = localStorage.getItem('lastTPO') || '';
+    const mood = localStorage.getItem('lastMood') || '';
+    const date = localStorage.getItem('lastDate') || new Date().toISOString().split('T')[0];
+    const groupName = `${mood} ${tpo}`.trim() || '스타일 추천';
     
     selectedOptions.forEach(option => {
       const selectedRec = option === 'A' 
@@ -158,7 +168,15 @@ export default function RecommendationPage() {
             item.category === category && item.description === value
           );
           if (!exists) {
-            items.push({ category, description: value as string });
+            items.push({ 
+              category, 
+              description: value as string,
+              groupId,
+              groupName,
+              groupDate: date,
+              groupWeather: weather || '',
+              groupTPO: tpo
+            });
           }
         }
       });
@@ -208,6 +226,11 @@ export default function RecommendationPage() {
         const dressingRoomItems: CategoryItem[] = [];
         const shoppingListItems: CategoryItem[] = [];
         const allCategories = ['outer', 'top', 'bottom', 'shoes', 'bag', 'belt', 'hat', 'jewelry'];
+        const groupId = new Date().getTime().toString();
+        const tpo = localStorage.getItem('lastTPO') || '';
+        const mood = localStorage.getItem('lastMood') || '';
+        const date = localStorage.getItem('lastDate') || new Date().toISOString().split('T')[0];
+        const groupName = `${mood} ${tpo}`.trim() || '스타일 추천';
         
         selectedOptions.forEach(option => {
           const selectedRec = option === 'A' 
@@ -217,7 +240,15 @@ export default function RecommendationPage() {
           allCategories.forEach(category => {
             const value = selectedRec[category as keyof RecommendationItem];
             if (value && value !== '해당 없음' && category !== 'summary') {
-              const item = { category, description: value as string };
+              const item = { 
+                category, 
+                description: value as string,
+                groupId,
+                groupName,
+                groupDate: date,
+                groupWeather: weather || '',
+                groupTPO: tpo
+              };
               
               if (missingCategories.includes(category)) {
                 // Check if not already in shopping list
@@ -385,13 +416,15 @@ export default function RecommendationPage() {
         <h2 className="text-3xl font-bold text-center mb-4">AI 스타일 추천 결과</h2>
         
         {weather && (
-          <div className="text-center mb-6 p-3 bg-blue-50 rounded-lg inline-block mx-auto">
-            <p className="text-blue-700">
-              <span className="font-medium">날씨 정보:</span> {weather}
-            </p>
-            <p className="text-sm text-blue-600 mt-1">
-              AI가 현재 날씨를 고려하여 스타일을 추천했습니다
-            </p>
+          <div className="text-center mb-6">
+            <div className="inline-block p-4 bg-blue-50 rounded-lg">
+              <p className="text-blue-700">
+                <span className="font-medium">날씨 정보:</span> {weather}
+              </p>
+              <p className="text-sm text-blue-600 mt-1">
+                선택하신 날짜의 날씨를 고려하여 스타일을 추천했습니다
+              </p>
+            </div>
           </div>
         )}
         

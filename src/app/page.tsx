@@ -56,6 +56,7 @@ export default function Home() {
 
     try {
       clearPreviousRecommendations();
+      localStorage.removeItem('historySaved'); // Clear history saved flag
       
       // Save request data for later use
       localStorage.setItem('lastDate', formData.context.date);

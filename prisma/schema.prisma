@@ -25,11 +25,17 @@ model DressingRoomItem {
   userId          String
   category        String
   itemDescription String   @db.Text
+  groupId         String?  // 추천 그룹 ID
+  groupName       String?  // 그룹 이름 (예: "캐주얼 데이트룩")
+  groupDate       DateTime? // 추천받은 날짜
+  groupWeather    String?  // 날씨 정보
+  groupTPO        String?  // TPO 정보
   createdAt       DateTime @default(now())
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([userId])
+  @@index([groupId])
 }
 
 model ShoppingListItem {
