@@ -58,6 +58,7 @@ export default function Home() {
       clearPreviousRecommendations();
       
       // Save request data for later use
+      localStorage.setItem('lastDate', formData.context.date);
       localStorage.setItem('lastLocation', formData.context.location);
       localStorage.setItem('lastItem', formData.request.item);
       localStorage.setItem('lastTPO', formData.request.tpo);
@@ -72,6 +73,12 @@ export default function Home() {
       if (!response.ok) throw new Error('Failed to get recommendation');
 
       const data: RecommendationResponse = await response.json();
+      
+      // Save weather info if returned
+      if ('weather' in data && data.weather) {
+        localStorage.setItem('lastWeather', data.weather as string);
+      }
+      
       setCurrentRecommendation(data);
       router.push('/recommendation');
     } catch (error) {

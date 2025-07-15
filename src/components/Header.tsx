@@ -37,6 +37,16 @@ export default function Header() {
             >
               Shopping Recommendation
             </Link>
+            <Link
+              href="/history"
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                pathname === '/history'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              추천 히스토리
+            </Link>
           </nav>
         </div>
       </div>

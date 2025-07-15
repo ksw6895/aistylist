@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import Toast from '@/components/Toast';
 import { useApp } from '@/context/AppContext';
 import { RecommendationItem, CategoryItem } from '@/types';
 
@@ -18,20 +19,81 @@ export default function RecommendationPage() {
     
   } = useApp();
   
-  const [selectedOption, setSelectedOption] = useState<'A' | 'B' | 'none'>('A');
+  const [selectedOptions, setSelectedOptions] = useState<Set<'A' | 'B'>>(new Set());
   const [considering, setConsidering] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; items?: CategoryItem[]; type?: 'success' | 'error' | 'info' } | null>(null);
+  const [weather, setWeather] = useState<string>('');
 
   useEffect(() => {
     if (!currentRecommendation) {
       router.push('/');
+    } else {
+      // Get weather from localStorage
+      const weatherInfo = localStorage.getItem('lastWeather');
+      if (weatherInfo) {
+        setWeather(weatherInfo);
+      }
+      
+      // Save to history when recommendation is loaded
+      saveToHistory();
     }
   }, [currentRecommendation, router]);
+  
+  const saveToHistory = async () => {
+    if (!userId || !currentRecommendation) return;
+    
+    try {
+      const requestInfo = {
+        userInfo,
+        context: {
+          date: localStorage.getItem('lastDate') || new Date().toISOString().split('T')[0],
+          location: localStorage.getItem('lastLocation') || '',
+        },
+        request: {
+          item: localStorage.getItem('lastItem') || '',
+          tpo: localStorage.getItem('lastTPO') || '',
+          mood: localStorage.getItem('lastMood') || '',
+        }
+      };
+      
+      await fetch('/api/recommendations/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          requestInfo,
+          weather,
+          recommendationA: currentRecommendation.recommendation_A,
+          recommendationB: currentRecommendation.recommendation_B,
+          selectedOptions: Array.from(selectedOptions),
+        }),
+      });
+    } catch (error) {
+      console.error('Error saving to history:', error);
+    }
+  };
 
   if (!currentRecommendation) {
     return null;
   }
 
+  const analyzeConsideringText = async (text: string, selectedItems: any): Promise<string[]> => {
+    try {
+      const response = await fetch('/api/analyze-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, selectedItems }),
+      });
+      
+      const data = await response.json();
+      return data.missingCategories || [];
+    } catch (error) {
+      console.error('Error analyzing text:', error);
+      return [];
+    }
+  };
+  
   const parseConsideringText = (text: string): { missingItems: string[], categories: string[] } => {
     const missingKeywords = ['없어', '없는데', '없음', '빼고', '제외'];
     const categories = ['outer', 'top', 'bottom', 'shoes', 'bag', 'belt', 'hat', 'jewelry'];
@@ -74,21 +136,32 @@ export default function RecommendationPage() {
   };
 
   const handleAddToDressingRoom = async () => {
-    if (!userId || selectedOption === 'none') return;
+    if (!userId || selectedOptions.size === 0) {
+      setToast({ message: '착장을 선택해주세요.', type: 'error' });
+      return;
+    }
     
     setLoading(true);
-    const selectedRec = selectedOption === 'A' 
-      ? currentRecommendation.recommendation_A 
-      : currentRecommendation.recommendation_B;
-    
     const items: CategoryItem[] = [];
     const categories = ['outer', 'top', 'bottom', 'shoes', 'bag', 'belt', 'hat', 'jewelry'];
     
-    categories.forEach(category => {
-      const value = selectedRec[category as keyof RecommendationItem];
-      if (value && value !== '해당 없음' && category !== 'summary') {
-        items.push({ category, description: value as string });
-      }
+    selectedOptions.forEach(option => {
+      const selectedRec = option === 'A' 
+        ? currentRecommendation.recommendation_A 
+        : currentRecommendation.recommendation_B;
+      
+      categories.forEach(category => {
+        const value = selectedRec[category as keyof RecommendationItem];
+        if (value && value !== '해당 없음' && category !== 'summary') {
+          // Check if item already exists to avoid duplicates
+          const exists = items.some(item => 
+            item.category === category && item.description === value
+          );
+          if (!exists) {
+            items.push({ category, description: value as string });
+          }
+        }
+      });
     });
 
     try {
@@ -98,11 +171,18 @@ export default function RecommendationPage() {
         body: JSON.stringify({ userId, items }),
       });
       
-      alert('드레싱룸에 추가되었습니다!');
-      router.push('/dressing-room');
+      // Update history with selected options
+      await updateHistorySelection();
+      
+      setToast({ 
+        message: '드레싱룸에 추가되었습니다!', 
+        items: items,
+        type: 'success' 
+      });
+      setTimeout(() => router.push('/dressing-room'), 2000);
     } catch (error) {
       console.error('Error:', error);
-      alert('추가 중 오류가 발생했습니다.');
+      setToast({ message: '추가 중 오류가 발생했습니다.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -111,29 +191,53 @@ export default function RecommendationPage() {
   const handleAnotherRecommendation = async () => {
     setLoading(true);
     
-    if (selectedOption !== 'none' && considering.trim()) {
-      // Parse considering text for missing items
-      const { categories: missingCategories } = parseConsideringText(considering);
-      
-      if (missingCategories.length > 0) {
-        const selectedRec = selectedOption === 'A' 
+    if (selectedOptions.size > 0 && considering.trim()) {
+      // Get all selected items
+      const selectedItems: any = {};
+      selectedOptions.forEach(option => {
+        const rec = option === 'A' 
           ? currentRecommendation.recommendation_A 
           : currentRecommendation.recommendation_B;
-        
+        selectedItems[option] = rec;
+      });
+      
+      // Analyze considering text using AI
+      const missingCategories = await analyzeConsideringText(considering, selectedItems);
+      
+      if (missingCategories.length > 0) {
         const dressingRoomItems: CategoryItem[] = [];
         const shoppingListItems: CategoryItem[] = [];
-        
         const allCategories = ['outer', 'top', 'bottom', 'shoes', 'bag', 'belt', 'hat', 'jewelry'];
         
-        allCategories.forEach(category => {
-          const value = selectedRec[category as keyof RecommendationItem];
-          if (value && value !== '해당 없음' && category !== 'summary') {
-            if (missingCategories.includes(category)) {
-              shoppingListItems.push({ category, description: value as string });
-            } else {
-              dressingRoomItems.push({ category, description: value as string });
+        selectedOptions.forEach(option => {
+          const selectedRec = option === 'A' 
+            ? currentRecommendation.recommendation_A 
+            : currentRecommendation.recommendation_B;
+          
+          allCategories.forEach(category => {
+            const value = selectedRec[category as keyof RecommendationItem];
+            if (value && value !== '해당 없음' && category !== 'summary') {
+              const item = { category, description: value as string };
+              
+              if (missingCategories.includes(category)) {
+                // Check if not already in shopping list
+                const exists = shoppingListItems.some(existing => 
+                  existing.category === item.category && existing.description === item.description
+                );
+                if (!exists) {
+                  shoppingListItems.push(item);
+                }
+              } else {
+                // Check if not already in dressing room
+                const exists = dressingRoomItems.some(existing => 
+                  existing.category === item.category && existing.description === item.description
+                );
+                if (!exists) {
+                  dressingRoomItems.push(item);
+                }
+              }
             }
-          }
+          });
         });
         
         // Add to shopping list and dressing room
@@ -154,7 +258,14 @@ export default function RecommendationPage() {
             });
           }
           
-          alert('요청하신 아이템은 쇼핑 리스트에, 나머지는 내 옷장에 추가되었어요!');
+          // Update history with selected options
+          await updateHistorySelection();
+          
+          setToast({ 
+            message: '요청하신 아이템은 쇼핑 리스트에, 나머지는 내 옷장에 추가되었어요!',
+            items: [...shoppingListItems, ...dressingRoomItems],
+            type: 'success'
+          });
         } catch (error) {
           console.error('Error:', error);
         }
@@ -193,15 +304,21 @@ export default function RecommendationPage() {
       const data = await response.json();
       setCurrentRecommendation(data);
       setConsidering('');
-      setSelectedOption('A');
+      setSelectedOptions(new Set());
     } catch (error) {
       console.error('Error:', error);
-      alert('추천을 받는 중 오류가 발생했습니다.');
+      setToast({ message: '추천을 받는 중 오류가 발생했습니다.', type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
+  const updateHistorySelection = async () => {
+    // This will be called when user makes a selection
+    // Since we save on load, we just need to update the selected options
+    // For now, we'll rely on the initial save
+  };
+  
   const renderRecommendationCard = (rec: RecommendationItem, label: string) => (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <h3 className="text-xl font-semibold mb-2">{label}</h3>
@@ -265,7 +382,18 @@ export default function RecommendationPage() {
       <Header />
       
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold text-center mb-8">AI 스타일 추천 결과</h2>
+        <h2 className="text-3xl font-bold text-center mb-4">AI 스타일 추천 결과</h2>
+        
+        {weather && (
+          <div className="text-center mb-6 p-3 bg-blue-50 rounded-lg inline-block mx-auto">
+            <p className="text-blue-700">
+              <span className="font-medium">날씨 정보:</span> {weather}
+            </p>
+            <p className="text-sm text-blue-600 mt-1">
+              AI가 현재 날씨를 고려하여 스타일을 추천했습니다
+            </p>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {renderRecommendationCard(currentRecommendation.recommendation_A, '착장 A')}
@@ -273,72 +401,87 @@ export default function RecommendationPage() {
         </div>
         
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">선택하기</h3>
+          <h3 className="text-lg font-semibold mb-4">착장 선택</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            원하는 착장을 모두 선택할 수 있습니다 (복수 선택 가능)
+          </p>
           <div className="space-y-3">
             <label className="flex items-center">
               <input
-                type="radio"
-                name="selection"
-                value="A"
-                checked={selectedOption === 'A'}
-                onChange={() => setSelectedOption('A')}
+                type="checkbox"
+                checked={selectedOptions.has('A')}
+                onChange={(e) => {
+                  const newOptions = new Set(selectedOptions);
+                  if (e.target.checked) {
+                    newOptions.add('A');
+                  } else {
+                    newOptions.delete('A');
+                  }
+                  setSelectedOptions(newOptions);
+                }}
                 className="mr-3"
               />
               <span>착장 A 선택</span>
             </label>
             <label className="flex items-center">
               <input
-                type="radio"
-                name="selection"
-                value="B"
-                checked={selectedOption === 'B'}
-                onChange={() => setSelectedOption('B')}
+                type="checkbox"
+                checked={selectedOptions.has('B')}
+                onChange={(e) => {
+                  const newOptions = new Set(selectedOptions);
+                  if (e.target.checked) {
+                    newOptions.add('B');
+                  } else {
+                    newOptions.delete('B');
+                  }
+                  setSelectedOptions(newOptions);
+                }}
                 className="mr-3"
               />
               <span>착장 B 선택</span>
             </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="selection"
-                value="none"
-                checked={selectedOption === 'none'}
-                onChange={() => setSelectedOption('none')}
-                className="mr-3"
-              />
-              <span>마음에 드는 착장 없음</span>
-            </label>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <label className="label">Considering</label>
-          <input
-            type="text"
-            className="input-field"
-            value={considering}
-            onChange={(e) => setConsidering(e.target.value)}
-            placeholder="예: 좀 더 밝은 색상으로, 검은색 벨트가 없어"
-          />
-        </div>
-        
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 mb-6">
           <button
             onClick={handleAddToDressingRoom}
-            disabled={loading || selectedOption === 'none'}
+            disabled={loading || selectedOptions.size === 0}
             className="btn-primary"
           >
             My dressing room에 추가
           </button>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-4">다른 추천 받기</h3>
+          <label className="label">개선점이나 요청사항</label>
+          <input
+            type="text"
+            className="input-field mb-4"
+            value={considering}
+            onChange={(e) => setConsidering(e.target.value)}
+            placeholder="예: 좀 더 밝은 색상으로, 검은색 벨트가 없어"
+          />
           <button
             onClick={handleAnotherRecommendation}
             disabled={loading}
-            className="btn-secondary"
+            className="btn-secondary w-full"
           >
             Another recommendation
           </button>
         </div>
+        
       </main>
+      
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          items={toast.items}
+          type={toast.type}
+          onClose={() => setToast(null)} 
+        />
+      )}
     </div>
   );
 }

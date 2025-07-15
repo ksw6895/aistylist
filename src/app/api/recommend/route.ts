@@ -23,7 +23,11 @@ export async function POST(request: NextRequest) {
     // Get AI recommendation
     const recommendation = await getStyleRecommendation(requestWithWeather);
     
-    return NextResponse.json(recommendation);
+    // Return recommendation with weather info
+    return NextResponse.json({
+      ...recommendation,
+      weather: weatherString
+    });
   } catch (error) {
     console.error('Recommendation error:', error);
     return NextResponse.json(

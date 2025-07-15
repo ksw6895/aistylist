@@ -17,6 +17,7 @@ model User {
   
   dressingRoomItems DressingRoomItem[]
   shoppingListItems ShoppingListItem[]
+  recommendations   RecommendationHistory[]
 }
 
 model DressingRoomItem {
@@ -37,6 +38,21 @@ model ShoppingListItem {
   category        String
   itemDescription String   @db.Text
   createdAt       DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model RecommendationHistory {
+  id                String   @id @default(uuid())
+  userId            String
+  requestInfo       Json     // 요청 정보 (날짜, 지역, TPO 등)
+  weather           String?  // 날씨 정보
+  recommendationA   Json     // 추천 A
+  recommendationB   Json     // 추천 B
+  selectedOptions   String[] // 선택한 옵션들 ['A', 'B']
+  createdAt         DateTime @default(now())
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
