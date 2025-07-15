@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  age       Int?
+  gender    String?
+  occupation String?
+  
+  dressingRoomItems DressingRoomItem[]
+  shoppingListItems ShoppingListItem[]
+}
+
+model DressingRoomItem {
+  id              String   @id @default(uuid())
+  userId          String
+  category        String
+  itemDescription String   @db.Text
+  createdAt       DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model ShoppingListItem {
+  id              String   @id @default(uuid())
+  userId          String
+  category        String
+  itemDescription String   @db.Text
+  createdAt       DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
