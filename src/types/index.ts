@@ -37,7 +37,7 @@ export interface RecommendRequest {
   userInfo: UserInfo;
   context: Context;
   request: StyleRequest;
-  previousRecommendations?: RecommendationItem[];
+  previousRecommendations?: RecommendationResponse[];
   considering?: string;
 }
 
