@@ -87,7 +87,7 @@ export default function DressingRoomPage() {
         
         {/* Tab Selection */}
         <div className="flex justify-center mb-8">
-          <div className="bg-white rounded-xl shadow-lg inline-flex p-1">
+          <div className="glass rounded-xl shadow-lg inline-flex p-1">
             <button
               onClick={() => setActiveTab('category')}
               className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 ${
