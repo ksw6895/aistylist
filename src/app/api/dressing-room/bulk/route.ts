@@ -19,6 +19,11 @@ export async function POST(request: NextRequest) {
         userId,
         category: item.category,
         itemDescription: item.description,
+        groupId: item.groupId,
+        groupName: item.groupName,
+        groupDate: item.groupDate ? new Date(item.groupDate) : null,
+        groupWeather: item.groupWeather,
+        groupTPO: item.groupTPO,
       })),
     });
 

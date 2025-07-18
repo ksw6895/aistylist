@@ -197,7 +197,6 @@ export default function RecommendationPage() {
         items: items,
         type: 'success' 
       });
-      setTimeout(() => router.push('/dressing-room'), 2000);
     } catch (error) {
       console.error('Error:', error);
       setToast({ message: '추가 중 오류가 발생했습니다.', type: 'error' });
