@@ -349,58 +349,65 @@ export default function RecommendationPage() {
     // For now, we'll rely on the initial save
   };
   
-  const renderRecommendationCard = (rec: RecommendationItem, label: string) => (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h3 className="text-xl font-semibold mb-2">{label}</h3>
-      <p className="text-gray-600 mb-4">{rec.summary}</p>
+  const renderRecommendationCard = (rec: RecommendationItem, label: string, isA: boolean) => (
+    <div className="card-premium p-8 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-2xl font-bold">{label}</h3>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+          isA ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'
+        }`}>
+          Style {isA ? 'A' : 'B'}
+        </span>
+      </div>
+      <p className="text-gray-600 mb-6 italic">{rec.summary}</p>
       
-      <div className="space-y-3">
+      <div className="space-y-4 flex-grow">
         {rec.outer !== '해당 없음' && (
-          <div className="border-l-4 border-primary-400 pl-3">
-            <span className="font-medium text-gray-700">아우터: </span>
-            <span className="text-gray-600">{rec.outer}</span>
+          <div className="group hover:bg-gray-50 p-3 rounded-lg transition-colors">
+            <span className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Outerwear</span>
+            <p className="text-gray-700 mt-1">{rec.outer}</p>
           </div>
         )}
         {rec.top !== '해당 없음' && (
-          <div className="border-l-4 border-primary-400 pl-3">
-            <span className="font-medium text-gray-700">상의: </span>
-            <span className="text-gray-600">{rec.top}</span>
+          <div className="group hover:bg-gray-50 p-3 rounded-lg transition-colors">
+            <span className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Top</span>
+            <p className="text-gray-700 mt-1">{rec.top}</p>
           </div>
         )}
         {rec.bottom !== '해당 없음' && (
-          <div className="border-l-4 border-primary-400 pl-3">
-            <span className="font-medium text-gray-700">하의: </span>
-            <span className="text-gray-600">{rec.bottom}</span>
+          <div className="group hover:bg-gray-50 p-3 rounded-lg transition-colors">
+            <span className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Bottom</span>
+            <p className="text-gray-700 mt-1">{rec.bottom}</p>
           </div>
         )}
         {rec.shoes !== '해당 없음' && (
-          <div className="border-l-4 border-primary-400 pl-3">
-            <span className="font-medium text-gray-700">신발: </span>
-            <span className="text-gray-600">{rec.shoes}</span>
+          <div className="group hover:bg-gray-50 p-3 rounded-lg transition-colors">
+            <span className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Footwear</span>
+            <p className="text-gray-700 mt-1">{rec.shoes}</p>
           </div>
         )}
         {rec.bag !== '해당 없음' && (
-          <div className="border-l-4 border-primary-400 pl-3">
-            <span className="font-medium text-gray-700">가방: </span>
-            <span className="text-gray-600">{rec.bag}</span>
+          <div className="group hover:bg-gray-50 p-3 rounded-lg transition-colors">
+            <span className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Bag</span>
+            <p className="text-gray-700 mt-1">{rec.bag}</p>
           </div>
         )}
         {rec.belt !== '해당 없음' && (
-          <div className="border-l-4 border-primary-400 pl-3">
-            <span className="font-medium text-gray-700">벨트: </span>
-            <span className="text-gray-600">{rec.belt}</span>
+          <div className="group hover:bg-gray-50 p-3 rounded-lg transition-colors">
+            <span className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Belt</span>
+            <p className="text-gray-700 mt-1">{rec.belt}</p>
           </div>
         )}
         {rec.hat !== '해당 없음' && (
-          <div className="border-l-4 border-primary-400 pl-3">
-            <span className="font-medium text-gray-700">모자: </span>
-            <span className="text-gray-600">{rec.hat}</span>
+          <div className="group hover:bg-gray-50 p-3 rounded-lg transition-colors">
+            <span className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Headwear</span>
+            <p className="text-gray-700 mt-1">{rec.hat}</p>
           </div>
         )}
         {rec.jewelry !== '해당 없음' && (
-          <div className="border-l-4 border-primary-400 pl-3">
-            <span className="font-medium text-gray-700">주얼리: </span>
-            <span className="text-gray-600">{rec.jewelry}</span>
+          <div className="group hover:bg-gray-50 p-3 rounded-lg transition-colors">
+            <span className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Jewelry</span>
+            <p className="text-gray-700 mt-1">{rec.jewelry}</p>
           </div>
         )}
       </div>
@@ -408,37 +415,47 @@ export default function RecommendationPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Header />
       
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold text-center mb-4">AI 스타일 추천 결과</h2>
+      <main className="max-w-7xl mx-auto px-4 py-12">
+        <div className="text-center mb-8 animate-fade-in">
+          <h2 className="text-4xl font-bold gradient-text mb-2">Your AI Style Recommendations</h2>
+          <p className="text-gray-600">Curated outfits tailored to your preferences</p>
+        </div>
         
         {weather && (
-          <div className="text-center mb-6">
-            <div className="inline-block p-4 bg-blue-50 rounded-lg">
-              <p className="text-blue-700">
-                <span className="font-medium">날씨 정보:</span> {weather}
+          <div className="text-center mb-8 animate-scale-in">
+            <div className="inline-block p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+              <p className="text-blue-900 flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                </svg>
+                <span className="font-medium">Weather Forecast:</span> {weather}
               </p>
-              <p className="text-sm text-blue-600 mt-1">
-                선택하신 날짜의 날씨를 고려하여 스타일을 추천했습니다
+              <p className="text-sm text-blue-700 mt-1">
+                Style recommendations optimized for your weather conditions
               </p>
             </div>
           </div>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {renderRecommendationCard(currentRecommendation.recommendation_A, '착장 A')}
-          {renderRecommendationCard(currentRecommendation.recommendation_B, '착장 B')}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+          <div className="animate-scale-in">
+            {renderRecommendationCard(currentRecommendation.recommendation_A, 'Outfit Option A', true)}
+          </div>
+          <div className="animate-scale-in" style={{ animationDelay: '0.1s' }}>
+            {renderRecommendationCard(currentRecommendation.recommendation_B, 'Outfit Option B', false)}
+          </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">착장 선택</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            원하는 착장을 모두 선택할 수 있습니다 (복수 선택 가능)
+        <div className="card-premium p-8 mb-8 animate-scale-in" style={{ animationDelay: '0.2s' }}>
+          <h3 className="text-xl font-semibold mb-4">Select Your Preferred Styles</h3>
+          <p className="text-gray-600 mb-6">
+            Choose one or both outfits to add to your wardrobe
           </p>
-          <div className="space-y-3">
-            <label className="flex items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="flex items-center p-4 rounded-xl border-2 border-gray-200 hover:border-gray-400 transition-all cursor-pointer group">
               <input
                 type="checkbox"
                 checked={selectedOptions.has('A')}
@@ -451,11 +468,11 @@ export default function RecommendationPage() {
                   }
                   setSelectedOptions(newOptions);
                 }}
-                className="mr-3"
+                className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
               />
-              <span>착장 A 선택</span>
+              <span className="ml-3 font-medium group-hover:text-gray-900">Select Style A</span>
             </label>
-            <label className="flex items-center">
+            <label className="flex items-center p-4 rounded-xl border-2 border-gray-200 hover:border-gray-400 transition-all cursor-pointer group">
               <input
                 type="checkbox"
                 checked={selectedOptions.has('B')}
@@ -468,40 +485,52 @@ export default function RecommendationPage() {
                   }
                   setSelectedOptions(newOptions);
                 }}
-                className="mr-3"
+                className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
               />
-              <span>착장 B 선택</span>
+              <span className="ml-3 font-medium group-hover:text-gray-900">Select Style B</span>
             </label>
+          </div>
+          
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={handleAddToDressingRoom}
+              disabled={loading || selectedOptions.size === 0}
+              className="btn-primary px-8"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add to My Wardrobe
+            </button>
           </div>
         </div>
         
-        <div className="flex justify-center gap-4 mb-6">
-          <button
-            onClick={handleAddToDressingRoom}
-            disabled={loading || selectedOptions.size === 0}
-            className="btn-primary"
-          >
-            My dressing room에 추가
-          </button>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">다른 추천 받기</h3>
-          <label className="label">개선점이나 요청사항</label>
-          <input
-            type="text"
-            className="input-field mb-4"
-            value={considering}
-            onChange={(e) => setConsidering(e.target.value)}
-            placeholder="예: 좀 더 밝은 색상으로, 검은색 벨트가 없어"
-          />
-          <button
-            onClick={handleAnotherRecommendation}
-            disabled={loading}
-            className="btn-secondary w-full"
-          >
-            Another recommendation
-          </button>
+        <div className="card-premium p-8 animate-scale-in" style={{ animationDelay: '0.3s' }}>
+          <h3 className="text-xl font-semibold mb-4">Request Another Recommendation</h3>
+          <p className="text-gray-600 mb-6">
+            Want something different? Let us know what you'd like to change
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="label">Adjustments or Special Requests</label>
+              <textarea
+                className="input-field min-h-[100px] resize-none"
+                value={considering}
+                onChange={(e) => setConsidering(e.target.value)}
+                placeholder="E.g., 'Brighter colors', 'More formal', 'I don't have a black belt'..."
+              />
+            </div>
+            <button
+              onClick={handleAnotherRecommendation}
+              disabled={loading}
+              className="btn-secondary w-full flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Get Another Recommendation
+            </button>
+          </div>
         </div>
         
       </main>

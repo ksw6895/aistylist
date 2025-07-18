@@ -17,14 +17,14 @@ interface Item {
 }
 
 const categoryNames: { [key: string]: string } = {
-  outer: '아우터',
-  top: '상의',
-  bottom: '하의',
-  shoes: '신발',
-  bag: '가방',
-  belt: '벨트',
-  hat: '모자',
-  jewelry: '주얼리',
+  outer: 'Outerwear',
+  top: 'Tops',
+  bottom: 'Bottoms',
+  shoes: 'Footwear',
+  bag: 'Bags',
+  belt: 'Belts',
+  hat: 'Headwear',
+  jewelry: 'Jewelry',
 };
 
 export default function DressingRoomPage() {
@@ -76,34 +76,37 @@ export default function DressingRoomPage() {
   const categories = ['outer', 'top', 'bottom', 'shoes', 'bag', 'belt', 'hat', 'jewelry'];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Header />
       
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold text-center mb-8">My Dressing Room</h2>
+      <main className="max-w-7xl mx-auto px-4 py-12">
+        <div className="text-center mb-10 animate-fade-in">
+          <h2 className="text-4xl font-bold gradient-text mb-2">My Wardrobe</h2>
+          <p className="text-gray-600">Your personal fashion collection</p>
+        </div>
         
         {/* Tab Selection */}
-        <div className="flex justify-center mb-6">
-          <div className="bg-white rounded-lg shadow-md inline-flex">
+        <div className="flex justify-center mb-8">
+          <div className="bg-white rounded-xl shadow-lg inline-flex p-1">
             <button
               onClick={() => setActiveTab('category')}
-              className={`px-6 py-3 rounded-l-lg font-medium transition-colors ${
+              className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 ${
                 activeTab === 'category'
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-gray-900 text-white shadow-md'
+                  : 'bg-transparent text-gray-700 hover:text-gray-900'
               }`}
             >
-              카테고리별 보기
+              By Category
             </button>
             <button
               onClick={() => setActiveTab('group')}
-              className={`px-6 py-3 rounded-r-lg font-medium transition-colors ${
+              className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 ${
                 activeTab === 'group'
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-gray-900 text-white shadow-md'
+                  : 'bg-transparent text-gray-700 hover:text-gray-900'
               }`}
             >
-              추천 묶음별 보기
+              By Outfit
             </button>
           </div>
         </div>
@@ -114,77 +117,108 @@ export default function DressingRoomPage() {
           </div>
         ) : (
           activeTab === 'category' ? (
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="flex flex-wrap border-b">
-                {categories.map(category => (
-                  <button
-                    key={category}
-                    onClick={() => setActiveCategory(category)}
-                    className={`px-6 py-3 font-medium transition-colors ${
-                      activeCategory === category
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {categoryNames[category]}
-                  </button>
-                ))}
-              </div>
-              
-              <div className="p-6">
-                {getItemsByCategory(activeCategory).length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <p className="text-lg">아직 {categoryNames[activeCategory]} 카테고리에 저장된 아이템이 없습니다.</p>
-                    <p className="mt-2">AI 스타일리스트의 추천을 받아보세요!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {getItemsByCategory(activeCategory).map(item => (
-                      <div key={item.id} className="border-l-4 border-primary-400 pl-4 py-2">
-                        <p className="text-gray-800">{item.itemDescription}</p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          추가일: {new Date(item.createdAt).toLocaleDateString('ko-KR')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            <div className="animate-scale-in">
+              <div className="card-premium overflow-hidden">
+                <div className="flex flex-wrap gap-2 p-6 border-b border-gray-100">
+                  {categories.map(category => (
+                    <button
+                      key={category}
+                      onClick={() => setActiveCategory(category)}
+                      className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+                        activeCategory === category
+                          ? 'bg-gray-900 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {categoryNames[category]}
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="p-8">
+                  {getItemsByCategory(activeCategory).length === 0 ? (
+                    <div className="text-center py-16">
+                      <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      <p className="text-lg font-medium text-gray-900 mb-2">No {categoryNames[activeCategory]} yet</p>
+                      <p className="text-gray-600">Get AI recommendations to build your wardrobe</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {getItemsByCategory(activeCategory).map(item => (
+                        <div key={item.id} className="group p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-300">
+                          <p className="text-gray-900 font-medium">{item.itemDescription}</p>
+                          <p className="text-sm text-gray-500 mt-2">
+                            Added {new Date(item.createdAt).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-scale-in">
               {Object.keys(groups).length === 0 ? (
-                <div className="bg-white rounded-lg shadow-lg p-12 text-center text-gray-500">
-                  <p className="text-lg">아직 저장된 추천 묶음이 없습니다.</p>
-                  <p className="mt-2">AI 스타일리스트의 추천을 받아보세요!</p>
+                <div className="card-premium p-16 text-center">
+                  <svg className="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <p className="text-xl font-medium text-gray-900 mb-2">No outfit collections yet</p>
+                  <p className="text-gray-600">Your outfit recommendations will appear here</p>
                 </div>
               ) : (
-                Object.entries(groups).map(([groupId, groupItems]) => {
+                Object.entries(groups).map(([groupId, groupItems], index) => {
                   const firstItem = groupItems[0];
                   return (
-                    <div key={groupId} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                      <div className="bg-primary-50 p-4 border-b border-primary-100">
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          {firstItem.groupName || '스타일 추천'}
+                    <div key={groupId} className="card-premium overflow-hidden animate-scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b border-gray-200">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {firstItem.groupName || 'Style Recommendation'}
                         </h3>
-                        <div className="flex gap-4 mt-2 text-sm text-gray-600">
+                        <div className="flex flex-wrap gap-4 mt-3 text-sm">
                           {firstItem.groupDate && (
-                            <span>날짜: {new Date(firstItem.groupDate).toLocaleDateString('ko-KR')}</span>
+                            <span className="flex items-center gap-1 text-gray-600">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              {new Date(firstItem.groupDate).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric', 
+                                year: 'numeric' 
+                              })}
+                            </span>
                           )}
                           {firstItem.groupWeather && (
-                            <span>날씨: {firstItem.groupWeather}</span>
+                            <span className="flex items-center gap-1 text-gray-600">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                              </svg>
+                              {firstItem.groupWeather}
+                            </span>
                           )}
                           {firstItem.groupTPO && (
-                            <span>TPO: {firstItem.groupTPO}</span>
+                            <span className="flex items-center gap-1 text-gray-600">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {firstItem.groupTPO}
+                            </span>
                           )}
                         </div>
                       </div>
-                      <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {groupItems.map(item => (
-                            <div key={item.id} className="border-l-4 border-primary-400 pl-4 py-2">
-                              <p className="text-sm font-medium text-gray-600">{categoryNames[item.category]}</p>
-                              <p className="text-gray-800">{item.itemDescription}</p>
+                            <div key={item.id} className="group p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                              <p className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">{categoryNames[item.category]}</p>
+                              <p className="text-gray-700">{item.itemDescription}</p>
                             </div>
                           ))}
                         </div>
