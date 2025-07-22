@@ -53,7 +53,7 @@ ${JSON.stringify(selectedItems, null, 2)}
     
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      return NextResponse.json({ missingCategories: [] });
+      return APIResponse.success({ missingCategories: [] }, 'No JSON found in response');
     }
     
     const analysis = JSON.parse(jsonMatch[0]);
