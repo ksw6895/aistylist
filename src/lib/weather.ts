@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { WeatherData } from '@/types';
+import { env } from '@/lib/env';
+import { withCache, cacheKeys } from '@/lib/cache';
 
-const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+const WEATHER_API_KEY = env.OPENWEATHERMAP_API_KEY;
 const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 const cityNameMapping: { [key: string]: string } = {
@@ -37,33 +39,45 @@ const cityNameMapping: { [key: string]: string } = {
   '안양': 'Anyang',
 };
 
-export async function getWeatherData(location: string): Promise<WeatherData | null> {
+export async function getWeatherData(location: { lat: number; lon: number } | string): Promise<WeatherData | null> {
   if (!WEATHER_API_KEY) {
     console.warn('Weather API key not configured');
     return null;
   }
 
-  try {
-    const cityName = cityNameMapping[location] || location;
-    
-    const response = await axios.get(WEATHER_API_URL, {
-      params: {
-        q: cityName,
+  // Generate cache key based on location
+  const cacheKey = typeof location === 'string' 
+    ? `weather:city:${location}` 
+    : cacheKeys.weather(location.lat, location.lon);
+
+  return withCache(cacheKey, async () => {
+    try {
+      let params: any = {
         appid: WEATHER_API_KEY,
         units: 'metric',
         lang: 'kr'
-      }
-    });
+      };
 
-    return {
-      temp: Math.round(response.data.main.temp),
-      description: response.data.weather[0].description,
-      main: response.data.weather[0].main
-    };
-  } catch (error) {
-    console.error('Weather API error:', error);
-    return null;
-  }
+      if (typeof location === 'string') {
+        const cityName = cityNameMapping[location] || location;
+        params.q = cityName;
+      } else {
+        params.lat = location.lat;
+        params.lon = location.lon;
+      }
+      
+      const response = await axios.get(WEATHER_API_URL, { params });
+
+      return {
+        temp: Math.round(response.data.main.temp),
+        description: response.data.weather[0].description,
+        main: response.data.weather[0].main
+      };
+    } catch (error) {
+      console.error('Weather API error:', error);
+      return null;
+    }
+  }, 900); // Cache for 15 minutes
 }
 
 export function formatWeatherString(weather: WeatherData | null): string {

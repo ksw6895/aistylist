@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Toast from '@/components/Toast';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { useApp } from '@/context/AppContext';
 import { RecommendationItem, CategoryItem } from '@/types';
 
@@ -417,6 +418,14 @@ export default function RecommendationPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      
+      {loading && (
+        <LoadingSpinner 
+          fullScreen 
+          size="large" 
+          text="Processing your request..." 
+        />
+      )}
       
       <main className="max-w-7xl mx-auto px-4 py-12">
         <div className="text-center mb-8 animate-fade-in">

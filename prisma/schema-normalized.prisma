@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  age       Int?
+  gender    String?
+  occupation String?
+  
+  dressingRoomItems DressingRoomItem[]
+  shoppingListItems ShoppingListItem[]
+  recommendations   RecommendationHistory[]
+  outfitGroups      OutfitGroup[]
+}
+
+enum Category {
+  TOP
+  BOTTOM
+  DRESS
+  OUTER
+  SHOES
+  ACCESSORIES
+  BAG
+  BELT
+  HAT
+  JEWELRY
+}
+
+model OutfitGroup {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  date      DateTime
+  weather   String?
+  tpo       String?
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     DressingRoomItem[]
+  
+  @@index([userId, date])
+  @@index([userId, createdAt])
+}
+
+model DressingRoomItem {
+  id              String   @id @default(uuid())
+  userId          String
+  category        Category
+  name            String
+  description     String?  @db.Text
+  groupId         String?
+  createdAt       DateTime @default(now())
+  
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group           OutfitGroup?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  
+  @@index([userId, category])
+  @@index([groupId])
+}
+
+model ShoppingListItem {
+  id              String   @id @default(uuid())
+  userId          String
+  category        Category
+  name            String
+  description     String?  @db.Text
+  priority        Int      @default(0) // 0 = low, 1 = medium, 2 = high
+  purchased       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, purchased])
+  @@index([userId, category])
+}
+
+model RecommendationHistory {
+  id                String   @id @default(uuid())
+  userId            String
+  requestDate       DateTime
+  requestLocation   String
+  requestTPO        String
+  requestMood       String
+  weather           String?
+  recommendationA   Json
+  recommendationB   Json
+  selectedOptions   String[] // ['A', 'B']
+  createdAt         DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@index([userId, requestDate])
+}

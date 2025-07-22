@@ -1,12 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { APIResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/error-handler';
+import { z } from 'zod';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const userId = searchParams.get('userId');
 
   if (!userId) {
-    return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    return APIResponse.badRequest('User ID required');
   }
 
   try {
@@ -15,27 +18,30 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(items);
+    return APIResponse.success(items, 'Dressing room items fetched successfully');
   } catch (error) {
-    console.error('Error fetching dressing room items:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch items' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
+
+// Input validation schema
+const createItemSchema = z.object({
+  userId: z.string().min(1),
+  category: z.string().min(1),
+  itemDescription: z.string().min(1),
+});
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, category, itemDescription } = body;
-
-    if (!userId || !category || !itemDescription) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+    
+    // Validate input
+    const validationResult = createItemSchema.safeParse(body);
+    if (!validationResult.success) {
+      return APIResponse.badRequest('Invalid request data', validationResult.error.issues);
     }
+    
+    const { userId, category, itemDescription } = validationResult.data;
 
     const item = await prisma.dressingRoomItem.create({
       data: {
@@ -45,12 +51,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(item);
+    return APIResponse.success(item, 'Item added to dressing room');
   } catch (error) {
-    console.error('Error creating dressing room item:', error);
-    return NextResponse.json(
-      { error: 'Failed to create item' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

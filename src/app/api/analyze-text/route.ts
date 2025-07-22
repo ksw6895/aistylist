@@ -1,14 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { APIResponse } from '@/lib/api-response';
+import { z } from 'zod';
+import { env } from '@/lib/env';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+
+// Input validation schema
+const analyzeTextSchema = z.object({
+  text: z.string(),
+  selectedItems: z.array(z.any()).optional().default([]),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, selectedItems } = await request.json();
+    const body = await request.json();
+    
+    // Validate input
+    const validationResult = analyzeTextSchema.safeParse(body);
+    if (!validationResult.success) {
+      return APIResponse.badRequest('Invalid request data', validationResult.error.issues);
+    }
+    
+    const { text, selectedItems } = validationResult.data;
     
     if (!text) {
-      return NextResponse.json({ missingCategories: [] });
+      return APIResponse.success({ missingCategories: [] }, 'No text to analyze');
     }
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
@@ -40,9 +57,15 @@ ${JSON.stringify(selectedItems, null, 2)}
     }
     
     const analysis = JSON.parse(jsonMatch[0]);
-    return NextResponse.json(analysis);
+    return APIResponse.success(analysis, 'Text analyzed successfully');
   } catch (error) {
     console.error('Text analysis error:', error);
-    return NextResponse.json({ missingCategories: [] });
+    
+    if (error instanceof Error && error.message.includes('rate limit')) {
+      return APIResponse.error('AI service rate limit exceeded', 429, 'RATE_LIMIT_EXCEEDED');
+    }
+    
+    // Return empty array as fallback for backward compatibility
+    return APIResponse.success({ missingCategories: [] }, 'Analysis failed, returning default');
   }
 }

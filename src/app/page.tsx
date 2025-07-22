@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { useApp } from '@/context/AppContext';
 import { UserInfo, Context, StyleRequest, RecommendationResponse } from '@/types';
 
@@ -71,9 +72,13 @@ export default function Home() {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error('Failed to get recommendation');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get recommendation');
+      }
 
-      const data: RecommendationResponse = await response.json();
+      const result = await response.json();
+      const data: RecommendationResponse = result.data || result; // Support both old and new format
       
       // Save weather info if returned
       if ('weather' in data && data.weather) {
@@ -93,6 +98,14 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <Header />
+      
+      {loading && (
+        <LoadingSpinner 
+          fullScreen 
+          size="large" 
+          text="AI is creating your perfect outfit recommendations..." 
+        />
+      )}
       
       <main className="max-w-5xl mx-auto px-4 py-12">
         <div className="text-center mb-12 animate-fade-in">
